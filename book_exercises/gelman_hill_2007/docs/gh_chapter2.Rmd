@@ -1,0 +1,151 @@
+---
+  title: "Gelman & Hill (2007): Chapter 2"
+date: "2021-11-23"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+```
+
+## Exercises
+
+### 1.
+
+#### a)
+
+Not a perfect solution, but a quick way to get a normal distribution that is upper and lower bounded.
+
+```{r}
+x <- rnorm(100, 35, 10)
+for (i in 1:length(x)) {
+  print(x[i])
+  while (x[i] > 50 || x[i] < 0) {
+    x[i] <- rnorm(1, 35, 10)
+  }
+}
+hist(x)
+```
+
+$$\begin{align}
+& y = ax + b \\\
+& 100  a * 35 + b \\
+& 225 = a^{2} * 100
+\end{align}$$
+
+```{r}
+(a <- sqrt(225/100))
+```
+
+```{r}
+(b <- 100 - (1.5*35))
+```
+
+```{r}
+y <-( a * x) + b
+mean(y)
+sd(y)
+```
+
+b)  [Answer on stack overflow](https://stats.stackexchange.com/questions/45816/gelman-hill-textbook-question-about-linear-transformation)  
+
+### 2
+
+```{r}
+births <- c(
+  0.4777, 0.4875, 0.4859, 0.4754, 0.4874, 0.4864,
+  0.4813, 0.4787, 0.4895, 0.4797, 0.4876, 0.4859,
+  0.4857, 0.4907, 0.5010, 0.4903, 0.4860, 0.4911,
+  0.4871, 0.4725, 0.4822, 0.4870, 0.4823, 0.4973
+)
+```
+
+```{r}
+total_births <- 3900
+```
+
+```{r}
+(sd_prop <- sd(births))
+```
+
+```{r}
+(mean_prop <- mean(births))
+```
+
+```{r}
+(expect_sd <- sqrt((mean_prop * (1 - mean_prop) / total_births)))
+```
+
+```{r}
+df <- length(births) - 1
+(chi <- qchisq(c(0.025, 0.975), df))
+round((expect_sd * sqrt(df)) / sqrt(chi), 3)
+
+```
+
+### 3.
+
+```{r}
+n <- 20
+iters <- 1000
+x <- replicate(iters, sum(runif(n)))
+data <- data.frame(sum_unif = x)
+ggplot(data, aes(x = sum_unif)) +
+  geom_histogram(aes(y = ..density..), bins = 30) +
+  stat_function(
+    fun = dnorm,
+    args = list(
+      mean = mean(data$sum_unif),
+      sd = sd(data$sum_unif)
+    )
+  )
+
+```
+
+### 4.
+
+```{r}
+sim_height_diff <- 
+  function(n){
+    men <- rnorm(n, 69.1, 2.9)
+    wmen <- rnorm(n, 63.7, 2.7)
+    
+    x <- mean(men)
+    y <- mean(wmen)
+    return(x - y)
+    
+  }
+
+xx <- replicate(1000, sim_height_diff(100))
+hist(xx)
+```
+
+```{r}
+cat(sprintf("MEAN:\nTrue difference is %f\nSim diff is: %f", 69.1 - 63.7, mean(xx)))  
+```
+
+```{r}
+true_sd <- sqrt((2.9^2/100) + (2.7^2/100))
+cat(sprintf("SD:\nTrue difference is %f\nSim diff is: %f", true_sd, sd(xx)))  
+```
+
+### 5.
+
+```{r}
+n <- 100
+men <- rnorm(n, 69.1, 2.9)
+wmen <- rnorm(n, 63.7, 2.7)
+
+x <- mean(men)
+y <- mean(wmen)
+
+rho <- 0.3
+```
+
+mean(x + y) equals mean of mean(x) + mean(y).
+
+Standard deviation of (x + y) is more complicated. It's
+
+```{r}
+sqrt((sd(men)^2 + sd(wmen)^2 + (2 * rho * sd(men) * sd(wmen))))
+```
